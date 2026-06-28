@@ -1,26 +1,351 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================================
+   Travel Guide Theme — Warm travel-inspired palette
+   ============================================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary-50: #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
+
+  --color-surface-50: #fafaf9;
+  --color-surface-100: #f5f5f4;
+  --color-surface-200: #e7e5e4;
+  --color-surface-300: #d6d3d1;
+  --color-surface-400: #a8a29e;
+  --color-surface-500: #78716c;
+  --color-surface-600: #57534e;
+  --color-surface-700: #44403c;
+  --color-surface-800: #292524;
+  --color-surface-900: #1c1917;
+
+  --color-accent-blue: #3b82f6;
+  --color-accent-green: #10b981;
+  --color-accent-red: #ef4444;
+  --color-accent-purple: #8b5cf6;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.16;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+  --animate-shimmer: shimmer 1.5s infinite;
+  --animate-spin-slow: spin 3s linear infinite;
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+
+:root {
+  --background: #fafaf9;
+  --foreground: #1c1917;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1c1917;
+    --foreground: #fafaf9;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile touch optimization */
+@media (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure all interactive elements are tappable */
+  a, button, input, select, textarea {
+    touch-action: manipulation;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Prose styles for AI-generated markdown content
+   ============================================================ */
+
+.prose {
+  @apply text-surface-700 leading-relaxed;
+}
+
+.prose h2 {
+  @apply text-2xl font-display font-bold text-surface-900 mt-8 mb-4;
+}
+
+.prose h3 {
+  @apply text-xl font-display font-semibold text-surface-800 mt-6 mb-3;
+}
+
+.prose p {
+  @apply mb-4;
+}
+
+.prose ul {
+  @apply list-disc pl-6 mb-4 space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal pl-6 mb-4 space-y-1;
+}
+
+.prose li {
+  @apply text-surface-700;
+}
+
+.prose strong {
+  @apply font-semibold text-surface-900;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary-500 pl-4 italic text-surface-600 my-4;
+}
+
+.prose code {
+  @apply bg-surface-100 rounded px-1.5 py-0.5 text-sm text-accent-purple;
+}
+
+.prose a {
+  @apply text-primary-600 hover:text-primary-700 underline;
+}
+
+/* ============================================================
+   Scrollbar Styling
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* ============================================================
+   Print styles for PDF export
+   ============================================================ */
+
+@media print {
+  /* Hide non-content elements */
+  header,
+  footer,
+  .no-print,
+  button:not(.print-keep),
+  nav,
+  [role="tablist"],
+  .tab-navigation {
+    display: none !important;
+  }
+
+  /* Reset layout */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Full-width content */
+  main,
+  .max-w-7xl {
+    max-width: 100% !important;
+  }
+
+  /* Remove padding on containers */
+  .px-4,
+  .px-6,
+  .px-8 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Show all sections (not just tabbed) */
+  .tab-content {
+    display: block !important;
+  }
+
+  /* Remove shadows and borders */
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  .border,
+  .border-2 {
+    border: none !important;
+  }
+
+  /* Ensure text is readable */
+  * {
+    background: transparent !important;
+    color: black !important;
+  }
+
+  /* Keep images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Page breaks */
+  h2 {
+    page-break-before: always;
+  }
+
+  h2:first-child {
+    page-break-before: avoid;
+  }
+
+  /* Print-friendly links */
+  a {
+    text-decoration: underline;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Don't show URL for internal links or anchors */
+  a[href^="#"]::after,
+  a[href^="/"]::after {
+    content: none;
+  }
+
+  /* Print header */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ccc;
+  }
+
+  .print-header h2 {
+    font-size: 18pt;
+    margin: 0;
+  }
+
+  .print-header p {
+    font-size: 10pt;
+    color: #666;
+    margin: 4px 0 0;
+  }
+
+  /* Page footer */
+  @page {
+    margin: 2cm;
+    @bottom-center {
+      content: "TravelGuide — AI 智能旅游攻略";
+      font-size: 8pt;
+      color: #999;
+    }
+  }
+}
+
+/* Utility class for non-printable elements */
+.no-print {
+  /* Default: visible. Print media query above hides it. */
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
