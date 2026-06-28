@@ -3,6 +3,21 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import { defaultSchema } from "hast-util-sanitize";
+
+// Extend default schema to allow GFM table elements
+// Without this, tables from AI content are stripped → garbled text.
+const schema = {
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption", "colgroup", "col"],
+  attributes: {
+    ...defaultSchema.attributes,
+    table: ["className"],
+    th: ["className", "scope"],
+    td: ["className", "colspan", "rowspan"],
+    col: ["span"],
+  },
+};
 
 interface MarkdownRendererProps {
   content: string;
@@ -18,7 +33,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
     <div className={`prose ${className || ""}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeSanitize]}
+        rehypePlugins={[[rehypeSanitize, schema]]}
         components={{
           h2: ({ children, ...props }) => (
             <h2
