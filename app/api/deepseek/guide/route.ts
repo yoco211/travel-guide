@@ -48,17 +48,49 @@ export async function POST(request: Request) {
     );
   }
 
-  const { destination, language } = result.data;
+  const { destination } = result.data;
 
   try {
     const systemPrompt = buildDestinationSystemPrompt();
     const userMessage = buildDestinationUserMessage(destination);
-    const content = await chat(systemPrompt, userMessage, {
+    const rawContent = await chat(systemPrompt, userMessage, {
       temperature: 0.7,
       max_tokens: 4096,
     });
 
-    const parsed = JSON.parse(content);
+    // Extract JSON — DeepSeek may wrap it in ```json fences
+    let parsed: { sections?: unknown };
+    try {
+      // First, try direct parse
+      parsed = JSON.parse(rawContent);
+    } catch {
+      // Try regex extraction (strip markdown code fences)
+      const jsonMatch = rawContent.match(/\{[\s\S]*"sections"[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        // Last resort: try stripping ```json blocks
+        const stripped = rawContent
+          .replace(/^```json\s*/i, "")
+          .replace(/```\s*$/, "")
+          .trim();
+        parsed = JSON.parse(stripped);
+      }
+    }
+
+    if (!parsed.sections || !Array.isArray(parsed.sections)) {
+      return Response.json(
+        {
+          success: false,
+          error: {
+            code: "INVALID_RESPONSE",
+            message: "AI 返回格式异常，请重试",
+          },
+        },
+        { status: 500 }
+      );
+    }
+
     return Response.json({
       success: true,
       data: parsed,
