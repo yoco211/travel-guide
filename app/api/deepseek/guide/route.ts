@@ -1,12 +1,8 @@
-import { chat } from "@/lib/deepseek";
-import {
-  buildDestinationSystemPrompt,
-  buildDestinationUserMessage,
-} from "@/lib/prompts";
+import { getDestinationGuide } from "@/lib/guide-generator";
 import { guideRequestSchema } from "@/lib/validators";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
-export const runtime = "edge"; // 30s vs 10s on Vercel Hobby
+export const runtime = "edge";
 
 export async function POST(request: Request) {
   const rateLimitKey = getRateLimitKey(request);
@@ -29,7 +25,10 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return Response.json(
-      { success: false, error: { code: "INVALID_JSON", message: "请求格式无效" } },
+      {
+        success: false,
+        error: { code: "INVALID_JSON", message: "请求格式无效" },
+      },
       { status: 400 }
     );
   }
@@ -50,53 +49,9 @@ export async function POST(request: Request) {
 
   const { destination } = result.data;
 
-  try {
-    const systemPrompt = buildDestinationSystemPrompt();
-    const userMessage = buildDestinationUserMessage(destination);
-    const rawContent = await chat(systemPrompt, userMessage, {
-      temperature: 0.7,
-      max_tokens: 4096,
-    });
+  const sections = await getDestinationGuide(destination, "zh");
 
-    // Extract JSON — DeepSeek may wrap it in ```json fences
-    let parsed: { sections?: unknown };
-    try {
-      // First, try direct parse
-      parsed = JSON.parse(rawContent);
-    } catch {
-      // Try regex extraction (strip markdown code fences)
-      const jsonMatch = rawContent.match(/\{[\s\S]*"sections"[\s\S]*\}/);
-      if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
-      } else {
-        // Last resort: try stripping ```json blocks
-        const stripped = rawContent
-          .replace(/^```json\s*/i, "")
-          .replace(/```\s*$/, "")
-          .trim();
-        parsed = JSON.parse(stripped);
-      }
-    }
-
-    if (!parsed.sections || !Array.isArray(parsed.sections)) {
-      return Response.json(
-        {
-          success: false,
-          error: {
-            code: "INVALID_RESPONSE",
-            message: "AI 返回格式异常，请重试",
-          },
-        },
-        { status: 500 }
-      );
-    }
-
-    return Response.json({
-      success: true,
-      data: parsed,
-    });
-  } catch (error) {
-    console.error("Guide generation error:", error);
+  if (sections.length === 0) {
     return Response.json(
       {
         success: false,
@@ -108,4 +63,18 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  return Response.json(
+    {
+      success: true,
+      data: { sections },
+    },
+    {
+      headers: {
+        // Let CDN/browser cache for 1 hour (stale-while-revalidate 6h)
+        "Cache-Control":
+          "public, s-maxage=3600, stale-while-revalidate=21600",
+      },
+    }
+  );
 }
