@@ -64,17 +64,8 @@ export async function POST(request: Request) {
     );
   }
 
-  return Response.json(
-    {
-      success: true,
-      data: { sections },
-    },
-    {
-      headers: {
-        // Let CDN/browser cache for 1 hour (stale-while-revalidate 6h)
-        "Cache-Control":
-          "public, s-maxage=3600, stale-while-revalidate=21600",
-      },
-    }
-  );
+  return Response.json({
+    success: true,
+    data: { sections },
+  });
 }
