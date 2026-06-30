@@ -1,20 +1,15 @@
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import type { Metadata } from "next";
+import { useSearchParams } from "next/navigation";
 import { searchDestinations } from "@/data/destinations";
 import { DestinationCard } from "@/components/ui/DestinationCard";
 
-export const metadata: Metadata = {
-  title: "搜索目的地",
-  description: "搜索你感兴趣的目的地，发现完美的旅行目的地",
-};
-
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q } = await searchParams;
-  const query = q?.trim() || "";
+function SearchContent() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
+  const query = q.trim();
   const results = query ? searchDestinations(query) : [];
 
   return (
@@ -71,14 +66,13 @@ export default async function SearchPage({
                 ))}
               </div>
 
-              {/* AI Planner CTA */}
               <div className="mt-12 text-center">
                 <div className="bg-gradient-to-r from-primary-50 to-amber-50 rounded-3xl p-8 max-w-2xl mx-auto">
                   <p className="text-lg text-surface-700 mb-4">
                     没找到满意的？让 AI 为你定制专属攻略
                   </p>
                   <Link
-                    href={`/ai-planner`}
+                    href="/ai-planner"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors"
                   >
                     <span>🤖</span>
@@ -127,5 +121,13 @@ export default async function SearchPage({
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface-50 flex items-center justify-center"><p className="text-surface-500">加载中...</p></div>}>
+      <SearchContent />
+    </Suspense>
   );
 }

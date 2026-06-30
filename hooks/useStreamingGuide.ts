@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import { API_BASE } from "@/lib/api-config";
 import type { StreamEvent, GuideSection, PlannerRequest } from "@/types";
 
 interface UseStreamingGuideReturn {
@@ -58,7 +59,7 @@ export function useStreamingGuide(): UseStreamingGuideReturn {
     abortControllerRef.current = abortController;
 
     try {
-      const response = await fetch("/api/deepseek/plan", {
+      const response = await fetch(`${API_BASE}/api/deepseek/plan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),

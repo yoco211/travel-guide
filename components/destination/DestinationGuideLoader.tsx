@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { DestinationTabs } from "@/components/destination/DestinationTabs";
+import { API_BASE } from "@/lib/api-config";
 import type { GuideSection } from "@/types";
 
 interface Props {
@@ -28,7 +29,7 @@ export function DestinationGuideLoader({
     const timeoutId = setTimeout(() => controller.abort(), 35000);
 
     try {
-      const res = await fetch("/api/deepseek/guide", {
+      const res = await fetch(`${API_BASE}/api/deepseek/guide`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ destination: destinationName, language: "zh" }),
