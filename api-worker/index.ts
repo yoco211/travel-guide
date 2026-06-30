@@ -111,5 +111,29 @@ async function handlePlan(body: Record<string, unknown>, apiKey: string, baseUrl
   const raw = await dsChat(apiKey, baseUrl, PLAN_PROMPT, `请为以下旅行需求生成攻略：\n${msg}`, 4096);
   const parsed = extract(raw);
   if (!parsed?.sections?.length) return Response.json({ success: false, error: { code: "AI_ERROR" } }, { status: 500, headers: h });
-  return Response.json({ success: true, data: { sections: parsed.sections } }, { headers: h });
+
+  // Return SSE stream for progressive rendering
+  const encoder = new TextEncoder();
+  const sections = parsed.sections.sort((a, b) => a.order - b.order);
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      for (let i = 0; i < sections.length; i++) {
+        const s = sections[i];
+        controller.enqueue(encoder.encode(
+          `data: ${JSON.stringify({ type: "section_updated", sectionId: s.id, sectionTitle: s.title, content: s.content })}\n\n`
+        ));
+        if (i < sections.length - 1) {
+          // Small delay between sections for progressive-rendering effect
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "guide_complete" })}\n\n`));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...h, "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
+  });
 }

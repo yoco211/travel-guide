@@ -74,70 +74,79 @@ export function useStreamingGuide(): UseStreamingGuideReturn {
         throw new Error(errorData?.error?.message || "AI 生成失败");
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error("无法读取响应流");
-      }
+      // Check if response is SSE (text/event-stream) or plain JSON
+      const contentType = response.headers.get("content-type") || "";
 
-      const decoder = new TextDecoder();
-      let buffer = "";
+      if (contentType.includes("text/event-stream")) {
+        // SSE streaming mode
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("无法读取响应流");
+        }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-        buffer += decoder.decode(value, { stream: true });
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        // Process complete SSE events
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+          buffer += decoder.decode(value, { stream: true });
 
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const event: StreamEvent = JSON.parse(line.slice(6));
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
 
-              switch (event.type) {
-                case "section_updated":
-                  setSections((prev) =>
-                    prev.map((s) =>
-                      s.id === event.sectionId
-                        ? {
-                            ...s,
-                            title: event.sectionTitle || s.title,
-                            content: event.content || s.content,
-                          }
-                        : s
-                    )
-                  );
-                  break;
-
-                case "guide_complete":
-                  setIsStreaming(false);
-                  setIsComplete(true);
-                  break;
-
-                case "error":
-                  throw new Error(event.error || "未知错误");
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const event: StreamEvent = JSON.parse(line.slice(6));
+                switch (event.type) {
+                  case "section_updated":
+                    setSections((prev) =>
+                      prev.map((s) =>
+                        s.id === event.sectionId
+                          ? { ...s, title: event.sectionTitle || s.title, content: event.content || s.content }
+                          : s
+                      )
+                    );
+                    break;
+                  case "guide_complete":
+                    setIsStreaming(false);
+                    setIsComplete(true);
+                    break;
+                  case "error":
+                    throw new Error(event.error || "未知错误");
+                }
+              } catch (e) {
+                if (e instanceof SyntaxError) continue;
+                throw e;
               }
-            } catch (e) {
-              if (e instanceof SyntaxError) continue; // Skip malformed JSON
-              throw e;
             }
           }
         }
-      }
 
-      // Try to parse remaining buffer
-      if (buffer.startsWith("data: ")) {
-        try {
-          const event: StreamEvent = JSON.parse(buffer.slice(6));
-          if (event.type === "guide_complete") {
-            setIsStreaming(false);
-            setIsComplete(true);
-          }
-        } catch {
-          // Ignore
+        if (buffer.startsWith("data: ")) {
+          try {
+            const event: StreamEvent = JSON.parse(buffer.slice(6));
+            if (event.type === "guide_complete") {
+              setIsStreaming(false);
+              setIsComplete(true);
+            }
+          } catch { /* ignore */ }
+        }
+      } else {
+        // Plain JSON response — parse directly
+        const json = await response.json();
+        if (json.success && json.data?.sections) {
+          const incoming = json.data.sections as GuideSection[];
+          setSections((prev) =>
+            prev.map((s) => {
+              const match = incoming.find((inc) => inc.id === s.id);
+              return match ? { ...s, title: match.title, content: match.content } : s;
+            })
+          );
+        } else {
+          throw new Error(json.error?.message || "AI 生成失败");
         }
       }
 
