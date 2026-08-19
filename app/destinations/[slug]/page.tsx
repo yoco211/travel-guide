@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { DestinationHero } from "@/components/destination/DestinationHero";
 import { DestinationGuideLoader } from "@/components/destination/DestinationGuideLoader";
+import { getDestinationImage } from "@/data/destination-images";
 import { popularDestinations, getDestination as getDest } from "@/data/destinations";
 
 // Static params for ISR (page shell only — guide content loads client-side)
@@ -18,6 +19,8 @@ export async function generateMetadata({
   const { slug } = await params;
   const destination = getDest(slug);
   if (!destination) return { title: "目的地未找到" };
+  const destinationImage = getDestinationImage(destination.slug);
+  const heroImage = destinationImage?.heroUrl ?? destination.imageUrl;
 
   return {
     title: `${destination.name} 旅游攻略`,
@@ -25,13 +28,13 @@ export async function generateMetadata({
     openGraph: {
       title: `${destination.name} 旅游攻略 — TravelGuide`,
       description: destination.description,
-      images: [{ url: destination.imageUrl, width: 800, height: 600 }],
+      images: [{ url: heroImage, width: 800, height: 600 }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${destination.name} 旅游攻略 — TravelGuide`,
       description: destination.description,
-      images: [destination.imageUrl],
+      images: [heroImage],
     },
   };
 }
@@ -47,6 +50,8 @@ export default async function DestinationPage({
   if (!destination) {
     notFound();
   }
+  const destinationImage = getDestinationImage(destination.slug);
+  const heroImage = destinationImage?.heroUrl ?? destination.imageUrl;
 
   return (
     <div className="min-h-screen bg-surface-50">
@@ -54,7 +59,7 @@ export default async function DestinationPage({
       <DestinationGuideLoader
         destinationName={destination.name}
         destinationCountry={destination.country}
-        destinationImage={destination.imageUrl}
+        destinationImage={heroImage}
       />
     </div>
   );

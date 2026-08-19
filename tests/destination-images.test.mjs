@@ -24,3 +24,40 @@ test("every destination has a curated image manifest entry", () => {
 test("unknown destinations do not return a misleading image", () => {
   assert.equal(getDestinationImage("not-a-real-destination"), undefined);
 });
+
+test("known mismatched destination assets use scenic replacements", () => {
+  const scenicReplacementSlugs = [
+    "chengdu",
+    "guangzhou",
+    "shenzhen",
+    "chongqing",
+    "guilin",
+    "lijiang",
+    "dali",
+    "sanya",
+    "lhasa",
+    "suzhou",
+    "xiamen",
+    "qingdao",
+    "huangshan",
+    "kunming",
+    "seoul",
+    "chiang-mai",
+  ];
+
+  for (const slug of scenicReplacementSlugs) {
+    const original = popularDestinations.find(
+      (destination) => destination.slug === slug
+    );
+    const curated = getDestinationImage(slug);
+
+    assert.ok(original);
+    assert.ok(curated);
+    assert.notEqual(curated.heroUrl, original.imageUrl, `${slug} was not replaced`);
+    assert.notEqual(
+      curated.thumbnailUrl,
+      original.thumbnailUrl,
+      `${slug} thumbnail was not replaced`
+    );
+  }
+});
