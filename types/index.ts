@@ -164,6 +164,13 @@ export interface TripDay {
   activities: TripActivity[];
 }
 
+export interface ItineraryTemplate {
+  id: string;
+  name: string;
+  description: string;
+  days: TripDay[];
+}
+
 export type BudgetCategory =
   | "transport"
   | "accommodation"
@@ -185,6 +192,14 @@ export interface BudgetPlan {
   items: BudgetItem[];
 }
 
+export interface TripDestinationStop {
+  id: string;
+  destination: string;
+  arrivalDate: string;
+  departureDate: string;
+  transportNote?: string;
+}
+
 export interface TripPlan {
   schemaVersion: 1;
   id: string;
@@ -195,4 +210,5 @@ export interface TripPlan {
   guide: TravelGuide;
   itinerary: TripDay[];
   budget: BudgetPlan;
+  destinationStops?: TripDestinationStop[];
 }

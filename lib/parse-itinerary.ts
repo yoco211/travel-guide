@@ -92,12 +92,10 @@ function detectPeriod(text: string, lang: Lang): TimeBlock["period"] {
  * Parse a time block header and content from a chunk of text.
  */
 function parseTimeBlocks(dayText: string, lang: Lang): TimeBlock[] {
-  const labels = TIME_LABELS[lang];
-
   // Build a regex to split by time period keywords
   const pattern =
     lang === "zh"
-      ? /(?:上午|下午|晚上|中午|全天)\b/
+      ? /(?:上午|下午|晚上|中午|全天)/
       : /(?:Morning|Afternoon|Evening|Noon|All\s*Day)\b/i;
 
   const parts = dayText.split(pattern);
@@ -206,7 +204,7 @@ export function parseItinerary(
 
     // Clean up markdown headers (##, **, etc.)
     dayText = dayText
-      .replace(/^[\s*#\-—]+/, "")
+      .replace(/^[\s*#\-—:：]+/, "")
       .replace(/\*\*/g, "")
       .trim();
 

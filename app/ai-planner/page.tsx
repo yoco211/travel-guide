@@ -7,6 +7,7 @@ import { useStreamingGuide } from "@/hooks/useStreamingGuide";
 import type { PlannerFormState } from "@/types";
 import { createTripPlan } from "@/lib/trip-utils";
 import { saveStoredTrip } from "@/lib/trip-storage";
+import { buildItineraryFromGuide } from "@/lib/itinerary-utils";
 
 export default function AIPlannerPage() {
   const { sections, isStreaming, isComplete, error, startGeneration, abort } =
@@ -66,7 +67,10 @@ export default function AIPlannerPage() {
       metadata: { model: "DeepSeek" },
       }
     );
-    saveStoredTrip(trip);
+    saveStoredTrip({
+      ...trip,
+      itinerary: buildItineraryFromGuide(sections, request.dates.from),
+    });
     savedGenerationRef.current = generationKey;
     setSavedTripId(trip.id);
   }, [isComplete, sections]);

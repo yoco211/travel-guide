@@ -43,11 +43,15 @@ export function TripsWorkspace() {
     replaceStoredTrips(nextTrips);
   };
 
+  const handleTripChange = (nextTrip: TripPlan) => {
+    handleChange(trips.map((trip) => trip.id === nextTrip.id ? nextTrip : trip));
+  };
+
   if (!isReady) return <div className="h-48 rounded-2xl bg-white border border-surface-200 animate-pulse" />;
 
   const selectedTrip = selectedTripId ? trips.find((trip) => trip.id === selectedTripId) : undefined;
   if (selectedTrip) {
-    return <TripDetail trip={selectedTrip} onBack={() => { window.history.replaceState(null, "", "/my-trips"); setSelectedTripId(null); }} />;
+    return <TripDetail trip={selectedTrip} onChange={handleTripChange} onBack={() => { window.history.replaceState(null, "", "/my-trips"); setSelectedTripId(null); }} />;
   }
 
   return <><TripDashboard trips={trips} /><TripList trips={trips} onChange={handleChange} /></>;

@@ -64,6 +64,14 @@ const budgetPlanSchema = z.object({
   items: z.array(budgetItemSchema),
 });
 
+const destinationStopSchema = z.object({
+  id: z.string().min(1),
+  destination: z.string().min(1),
+  arrivalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  departureDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  transportNote: z.string().optional(),
+});
+
 export const tripPlanSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().min(1),
@@ -74,6 +82,7 @@ export const tripPlanSchema = z.object({
   guide: travelGuideSchema,
   itinerary: z.array(tripDaySchema),
   budget: budgetPlanSchema,
+  destinationStops: z.array(destinationStopSchema).optional(),
 });
 
 export function validateTripPlan(input: unknown) {
