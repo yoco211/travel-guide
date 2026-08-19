@@ -10,6 +10,7 @@ const { validateTripPlan } = await jiti.import("../lib/trip-schema.ts");
 const {
   deleteStoredTrip,
   listStoredTrips,
+  replaceStoredTrips,
   saveStoredTrip,
 } = await jiti.import("../lib/trip-storage.ts");
 
@@ -98,5 +99,19 @@ test("stores, lists, replaces, and deletes multiple trips", () => {
   assert.equal(listStoredTrips(storage)[1].title, "东京更新");
 
   deleteStoredTrip(first.id, storage);
+  assert.deepEqual(listStoredTrips(storage).map((trip) => trip.id), [second.id]);
+});
+
+test("replaces the complete stored trip collection", () => {
+  const storage = createMemoryStorage();
+  const first = createTripPlan(request, guide, new Date("2026-08-19T00:00:00.000Z"));
+  const second = createTripPlan(
+    { ...request, destination: "京都" },
+    { ...guide, destination: "京都" },
+    new Date("2026-08-20T00:00:00.000Z")
+  );
+
+  saveStoredTrip(first, storage);
+  replaceStoredTrips([second], storage);
   assert.deepEqual(listStoredTrips(storage).map((trip) => trip.id), [second.id]);
 });

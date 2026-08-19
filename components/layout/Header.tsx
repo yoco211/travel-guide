@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { href: "/", label: "首页" },
   { href: "/ai-planner", label: "AI 规划" },
+  { href: "/my-trips", label: "我的行程" },
 ];
 
 export function Header() {

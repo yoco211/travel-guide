@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { PlannerForm } from "@/components/planner/PlannerForm";
 import { GuideResult } from "@/components/planner/GuideResult";
 import { useStreamingGuide } from "@/hooks/useStreamingGuide";
 import type { PlannerFormState } from "@/types";
+import { createTripPlan } from "@/lib/trip-utils";
+import { saveStoredTrip } from "@/lib/trip-storage";
 
 export default function AIPlannerPage() {
   const { sections, isStreaming, isComplete, error, startGeneration, abort } =
@@ -12,13 +14,17 @@ export default function AIPlannerPage() {
 
   const [destination, setDestination] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [savedTripId, setSavedTripId] = useState<string | null>(null);
   const lastRequestRef = useRef<PlannerFormState | null>(null);
+  const savedGenerationRef = useRef<string | null>(null);
 
   const handleSubmit = useCallback(
     (data: PlannerFormState) => {
       setDestination(data.destination);
       setHasSubmitted(true);
       lastRequestRef.current = data;
+      savedGenerationRef.current = null;
+      setSavedTripId(null);
       startGeneration({
         origin: data.origin,
         destination: data.destination,
@@ -38,6 +44,32 @@ export default function AIPlannerPage() {
       handleSubmit(lastRequestRef.current);
     }
   }, [handleSubmit]);
+
+  useEffect(() => {
+    const request = lastRequestRef.current;
+    if (!isComplete || !request || sections.length === 0) return;
+
+    const generationKey = `${request.destination}:${request.dates.from}:${request.dates.to}:${sections
+      .map((section) => `${section.id}:${section.content.length}`)
+      .join("|")}`;
+    if (savedGenerationRef.current === generationKey) return;
+
+    const trip = createTripPlan(
+      {
+        ...request,
+        language: "zh",
+      },
+      {
+      destination: request.destination,
+      generatedAt: new Date().toISOString(),
+      sections,
+      metadata: { model: "DeepSeek" },
+      }
+    );
+    saveStoredTrip(trip);
+    savedGenerationRef.current = generationKey;
+    setSavedTripId(trip.id);
+  }, [isComplete, sections]);
 
   return (
     <div className="min-h-screen bg-surface-50">
@@ -96,6 +128,7 @@ export default function AIPlannerPage() {
                 error={error}
                 onAbort={abort}
                 onRetry={handleRetry}
+                savedTripId={savedTripId}
               />
             </div>
           )}

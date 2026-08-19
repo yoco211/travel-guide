@@ -51,6 +51,17 @@ export function saveStoredTrip(
   return nextTrips;
 }
 
+export function replaceStoredTrips(
+  trips: TripPlan[],
+  storage = getBrowserStorage()
+): TripPlan[] {
+  const nextTrips = sortTrips(trips);
+  if (storage) {
+    storage.setItem(TRIP_STORAGE_KEY, JSON.stringify(nextTrips));
+  }
+  return nextTrips;
+}
+
 export function deleteStoredTrip(
   tripId: string,
   storage = getBrowserStorage()

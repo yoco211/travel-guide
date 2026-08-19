@@ -3,6 +3,7 @@
 import { StreamingSection } from "@/components/planner/StreamingSection";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { PrintButton } from "@/components/ui/PrintButton";
+import Link from "next/link";
 import type { GuideSection } from "@/types";
 
 interface GuideResultProps {
@@ -13,6 +14,7 @@ interface GuideResultProps {
   error: string | null;
   onAbort: () => void;
   onRetry: () => void;
+  savedTripId?: string | null;
 }
 
 export function GuideResult({
@@ -23,6 +25,7 @@ export function GuideResult({
   error,
   onAbort,
   onRetry,
+  savedTripId,
 }: GuideResultProps) {
   // Filter to only show sections that have content or are being streamed
   const visibleSections = sections.filter(
@@ -77,6 +80,11 @@ export function GuideResult({
               ? "✅ 攻略已生成完成"
               : "🤖 AI 正在为你生成个性化攻略..."}
           </p>
+          {isComplete && savedTripId && (
+            <Link href="/my-trips" className="inline-flex mt-2 text-sm text-primary-700 hover:text-primary-800">
+              ✓ 已保存到我的行程
+            </Link>
+          )}
         </div>
         <div className="flex items-center gap-2 no-print">
           {isComplete && (
