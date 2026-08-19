@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/Toast";
+import { PWARegister } from "@/components/pwa/PWARegister";
 import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
@@ -88,6 +89,7 @@ export default function RootLayout({
       className={`${inter.variable} ${playfairDisplay.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col bg-surface-50 text-surface-900">
+        <PWARegister />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

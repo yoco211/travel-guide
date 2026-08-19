@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/", label: "首页" },
@@ -46,14 +47,16 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            className="md:hidden min-h-[44px] min-w-[44px] p-2 rounded-lg text-surface-600 active:text-surface-900 active:bg-surface-100 transition-colors touch-manipulation"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {/* Mobile Menu Button */}
+            <button
+              type="button"
+              className="md:hidden min-h-[44px] min-w-[44px] p-2 rounded-lg text-surface-600 active:text-surface-900 active:bg-surface-100 transition-colors touch-manipulation"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -67,7 +70,7 @@ export function Header() {
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            ) : (
+                ) : (
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -81,8 +84,9 @@ export function Header() {
                   d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
-            )}
-          </button>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

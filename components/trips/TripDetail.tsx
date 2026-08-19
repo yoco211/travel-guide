@@ -13,6 +13,8 @@ import {
 import { tripToICS, tripToMarkdown } from "@/lib/trip-export";
 import { createStayRecord, createTransportSegment } from "@/lib/trip-logistics";
 import { calculateBudgetTotal, toggleChecklistItem } from "@/lib/trip-personal-utils";
+import { TripInsights } from "@/components/trips/TripInsights";
+import { TripAssistant } from "@/components/trips/TripAssistant";
 import type { BudgetCategory, StayRecord, TripActivity, TripDay, TripPlan, TransportMode } from "@/types";
 
 interface TripDetailProps {
@@ -212,6 +214,9 @@ export function TripDetail({ trip, onBack, onChange }: TripDetailProps) {
           <button type="button" onClick={() => void handleShare()} className="min-h-[38px] px-3 py-2 rounded-xl bg-primary-50 text-sm text-primary-700 hover:bg-primary-100">分享行程</button>
         </div>
       </div>
+
+      <TripInsights trip={trip} />
+      <TripAssistant trip={trip} />
 
       <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

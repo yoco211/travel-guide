@@ -140,6 +140,8 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             </td>
           ),
           img: ({ src, alt, ...props }) => (
+            // Markdown may contain data URLs or remote URLs; keep the renderer flexible.
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={src}
               alt={alt || ""}

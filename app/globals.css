@@ -111,6 +111,25 @@
   --foreground: #1c1917;
 }
 
+html[data-theme="dark"] body {
+  background: #1c1917;
+  color: #fafaf9;
+}
+
+html[data-theme="dark"] .bg-white { background-color: #292524 !important; }
+html[data-theme="dark"] .bg-surface-50 { background-color: #292524 !important; }
+html[data-theme="dark"] .bg-surface-100 { background-color: #44403c !important; }
+html[data-theme="dark"] .text-surface-900 { color: #fafaf9 !important; }
+html[data-theme="dark"] .text-surface-700,
+html[data-theme="dark"] .text-surface-600 { color: #d6d3d1 !important; }
+html[data-theme="dark"] .text-surface-500,
+html[data-theme="dark"] .text-surface-400 { color: #a8a29e !important; }
+html[data-theme="dark"] .border-surface-200,
+html[data-theme="dark"] .border-surface-100 { border-color: #57534e !important; }
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select { background-color: #292524; color: #fafaf9; border-color: #57534e; }
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #1c1917;
