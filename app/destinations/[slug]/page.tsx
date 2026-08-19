@@ -27,6 +27,12 @@ export async function generateMetadata({
       description: destination.description,
       images: [{ url: destination.imageUrl, width: 800, height: 600 }],
     },
+    twitter: {
+      card: "summary_large_image",
+      title: `${destination.name} 旅游攻略 — TravelGuide`,
+      description: destination.description,
+      images: [destination.imageUrl],
+    },
   };
 }
 

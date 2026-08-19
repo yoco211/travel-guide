@@ -20,6 +20,7 @@ export function DestinationGuideLoader({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const retryCount = useRef(0);
+  const fetchGuideRef = useRef<() => Promise<void>>(async () => {});
 
   const fetchGuide = useCallback(async () => {
     setLoading(true);
@@ -53,7 +54,7 @@ export function DestinationGuideLoader({
         // Auto-retry once
         if (retryCount.current === 0) {
           retryCount.current++;
-          setTimeout(() => fetchGuide(), 2000);
+          setTimeout(() => void fetchGuideRef.current(), 2000);
           setError("首次加载较慢，正在自动重试...");
           return;
         }
@@ -71,7 +72,9 @@ export function DestinationGuideLoader({
   }, [destinationName]);
 
   useEffect(() => {
-    fetchGuide();
+    fetchGuideRef.current = fetchGuide;
+    const initialRequest = window.setTimeout(() => void fetchGuide(), 0);
+    return () => window.clearTimeout(initialRequest);
   }, [fetchGuide]);
 
   // Loading state
@@ -131,7 +134,7 @@ export function DestinationGuideLoader({
         <button
           onClick={() => {
             retryCount.current = 0;
-            fetchGuide();
+            void fetchGuide();
           }}
           className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary-600 text-white rounded-xl font-medium active:bg-primary-800 active:scale-[0.98] transition-all touch-manipulation min-h-[48px]"
         >

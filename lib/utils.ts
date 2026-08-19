@@ -20,12 +20,21 @@ export function formatDate(date: Date | string): string {
   });
 }
 
-export function getTodayISO(): string {
-  return new Date().toISOString().split("T")[0];
+export function getLocalISODate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-export function getDefaultTripDates(): { from: string; to: string } {
-  const today = new Date();
+export function getTodayISO(): string {
+  return getLocalISODate(new Date());
+}
+
+export function getDefaultTripDates(today = new Date()): {
+  from: string;
+  to: string;
+} {
   const nextMonth = new Date(today);
   nextMonth.setMonth(nextMonth.getMonth() + 1);
   const from = new Date(nextMonth);
@@ -33,7 +42,7 @@ export function getDefaultTripDates(): { from: string; to: string } {
   const to = new Date(from);
   to.setDate(to.getDate() + 6);
   return {
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
+    from: getLocalISODate(from),
+    to: getLocalISODate(to),
   };
 }

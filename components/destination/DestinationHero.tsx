@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Destination } from "@/types";
 import { SafeImage } from "@/components/ui/SafeImage";
 
@@ -22,6 +23,7 @@ export function DestinationHero({ destination }: DestinationHeroProps) {
         <SafeImage
           slug={destination.slug}
           alt={destination.name}
+          imageUrl={destination.imageUrl}
           className="w-full h-full"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
@@ -32,9 +34,9 @@ export function DestinationHero({ destination }: DestinationHeroProps) {
         <div className="max-w-3xl">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-white/70 text-sm mb-4">
-            <a href="/" className="hover:text-white transition-colors">
+            <Link href="/" className="hover:text-white transition-colors">
               首页
-            </a>
+            </Link>
             <span>/</span>
             <span className="text-white">{destination.name}</span>
           </div>

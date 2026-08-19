@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { Interest } from "@/types";
 import { getRegionLabel } from "@/lib/region";
 
@@ -57,12 +57,11 @@ export function MapView({
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<unknown>(null);
-  const [mounted, setMounted] = useState(false);
-
-  // Ensure we only render on client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     if (!mounted || !containerRef.current || mapRef.current) return;

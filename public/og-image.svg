@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">TravelGuide — AI 智能旅游攻略</title>
+  <desc id="desc">探索世界，AI 为你导航</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="55%" stop-color="#fef3c7" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.18" r="0.75">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" rx="36" fill="url(#background)" />
+  <rect width="1200" height="630" rx="36" fill="url(#glow)" />
+  <circle cx="1010" cy="120" r="160" fill="#ffffff" fill-opacity="0.18" />
+  <circle cx="1120" cy="520" r="230" fill="#92400e" fill-opacity="0.12" />
+  <text x="90" y="170" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="42" font-weight="700" fill="#92400e">✈️ TravelGuide</text>
+  <text x="90" y="310" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="76" font-weight="800" fill="#1c1917">探索世界，</text>
+  <text x="90" y="400" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="76" font-weight="800" fill="#d97706">AI 为你导航</text>
+  <text x="94" y="485" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="28" fill="#57534e">景点 · 交通 · 美食 · 住宿 · 个性化行程</text>
+</svg>

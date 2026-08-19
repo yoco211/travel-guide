@@ -20,17 +20,12 @@ export function ShareButton({
   className,
 }: ShareButtonProps) {
   const [open, setOpen] = useState(false);
-  const [canNativeShare, setCanNativeShare] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
   const shareText = `${title}${description ? ` — ${description}` : ""}`;
-
-  useEffect(() => {
-    setCanNativeShare(
-      typeof navigator !== "undefined" && !!navigator.share
-    );
-  }, []);
+  const canNativeShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   // Close dropdown on outside click
   useEffect(() => {

@@ -2,62 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
-// ============================================================
-// City-specific search keywords for landmark photos
-// ============================================================
-const CITY_KEYWORDS: Record<string, string> = {
-  beijing: "beijing-forbidden-city-tiananmen",
-  shanghai: "shanghai-bund-skyline-pudong",
-  chengdu: "chengdu-panda-sichuan",
-  xian: "xian-terracotta-warriors",
-  hangzhou: "hangzhou-west-lake",
-  guangzhou: "guangzhou-canton-tower",
-  shenzhen: "shenzhen-skyline",
-  chongqing: "chongqing-night-city",
-  guilin: "guilin-li-river-karst",
-  lijiang: "lijiang-old-town",
-  dali: "dali-erhai-lake",
-  sanya: "sanya-beach-tropical",
-  lhasa: "lhasa-potala-palace",
-  suzhou: "suzhou-garden-canal",
-  xiamen: "xiamen-gulangyu-island",
-  qingdao: "qingdao-beach-german",
-  zhangjiajie: "zhangjiajie-avatar-mountains",
-  huangshan: "huangshan-mountains-mist",
-  kunming: "kunming-stone-forest",
-  nanjing: "nanjing-sun-yat-sen-mausoleum",
-  "hong-kong": "hong-kong-victoria-harbour",
-  tokyo: "tokyo-shibuya-sensoji",
-  kyoto: "kyoto-temple-fushimi-inari",
-  seoul: "seoul-gyeongbokgung-palace",
-  bangkok: "bangkok-grand-palace-temple",
-  bali: "bali-rice-terrace-temple",
-  singapore: "singapore-marina-bay-sands",
-  "chiang-mai": "chiang-mai-temple-thailand",
-  hanoi: "hanoi-old-quarter-hoan-kiem",
-  "kuala-lumpur": "kuala-lumpur-petronas-towers",
-  paris: "paris-eiffel-tower-seine",
-  london: "london-big-ben-tower-bridge",
-  barcelona: "barcelona-sagrada-familia-gaudi",
-  rome: "rome-colosseum-vatican",
-  prague: "prague-charles-bridge-castle",
-  amsterdam: "amsterdam-canal-bikes",
-  santorini: "santorini-blue-domes-sunset",
-  reykjavik: "reykjavik-northern-lights-iceland",
-  vienna: "vienna-schonbrunn-palace",
-  lisbon: "lisbon-tram-alfama",
-  dubai: "dubai-burj-khalifa-skyline",
-  istanbul: "istanbul-blue-mosque-hagia-sophia",
-  "new-york": "new-york-statue-of-liberty-skyline",
-  "mexico-city": "mexico-city-zocalo-pyramid",
-  "rio-de-janeiro": "rio-de-janeiro-christ-redeemer-sugarloaf",
-  sydney: "sydney-opera-house-harbour-bridge",
-  maldives: "maldives-overwater-bungalow",
-  marrakech: "marrakech-medina-souk-morocco",
-  cairo: "cairo-pyramids-giza-egypt",
-  "cape-town": "cape-town-table-mountain",
-};
+import { getImageUrl } from "@/lib/image-url";
 
 // ============================================================
 // Gradient fallbacks (same as before)
@@ -119,27 +64,19 @@ function getGradient(slug: string): string {
   return CITY_GRADIENTS[slug] || "from-primary-500 via-amber-400 to-orange-300";
 }
 
-function getKeywords(slug: string): string {
-  return CITY_KEYWORDS[slug] || slug.replace(/-/g, "-") + "-city-landmark-travel";
-}
-
-// Build a photo URL from Unsplash source (dynamically finds relevant photo)
-function getPhotoUrl(slug: string, width: number): string {
-  const keywords = getKeywords(slug);
-  return `https://source.unsplash.com/${width}x${Math.round(width * 0.75)}/?${keywords}`;
-}
-
 interface SafeImageProps {
   slug: string;
   alt: string;
   className?: string;
+  imageUrl?: string;
 }
 
-export function SafeImage({ slug, alt, className }: SafeImageProps) {
+export function SafeImage({ slug, alt, className, imageUrl }: SafeImageProps) {
   const [imgError, setImgError] = useState(false);
+  const src = getImageUrl(imageUrl);
 
-  // If image failed to load, show gradient fallback
-  if (imgError) {
+  // If image is unavailable, show a deterministic gradient fallback.
+  if (imgError || !src) {
     const gradient = getGradient(slug);
     return (
       <div
@@ -162,8 +99,9 @@ export function SafeImage({ slug, alt, className }: SafeImageProps) {
 
   // Try loading real photo
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={getPhotoUrl(slug, 800)}
+      src={src}
       alt={alt}
       className={cn("object-cover", className)}
       loading="lazy"
