@@ -131,3 +131,68 @@ export interface PlannerFormState {
   travelStyle: TravelStyle;
   additionalNotes: string;
 }
+
+// ============================================================
+// Local Trip Workspace Types
+// ============================================================
+
+export type TripActivityPeriod =
+  | "morning"
+  | "afternoon"
+  | "evening"
+  | "all-day"
+  | "other";
+
+export interface TripActivity {
+  id: string;
+  title: string;
+  period: TripActivityPeriod;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  coordinates?: { lat: number; lng: number };
+  category?: string;
+  notes?: string;
+  estimatedCost?: number;
+  currency?: string;
+}
+
+export interface TripDay {
+  id: string;
+  date: string;
+  label: string;
+  activities: TripActivity[];
+}
+
+export type BudgetCategory =
+  | "transport"
+  | "accommodation"
+  | "food"
+  | "tickets"
+  | "shopping"
+  | "other";
+
+export interface BudgetItem {
+  id: string;
+  category: BudgetCategory;
+  label: string;
+  amount: number;
+  note?: string;
+}
+
+export interface BudgetPlan {
+  currency: string;
+  items: BudgetItem[];
+}
+
+export interface TripPlan {
+  schemaVersion: 1;
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  request: PlannerRequest;
+  guide: TravelGuide;
+  itinerary: TripDay[];
+  budget: BudgetPlan;
+}
