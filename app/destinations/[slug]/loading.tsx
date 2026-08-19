@@ -1,4 +1,6 @@
 export default function DestinationLoading() {
+  const skeletonWidths = [92, 78, 86, 68, 84, 74, 90, 63, 88, 72];
+
   return (
     <div className="min-h-screen bg-surface-50">
       {/* Hero skeleton */}
@@ -14,11 +16,11 @@ export default function DestinationLoading() {
           ))}
         </div>
         <div className="space-y-3">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {skeletonWidths.map((width, i) => (
             <div
               key={i}
               className="h-4 bg-surface-100 rounded animate-pulse"
-              style={{ width: `${Math.random() * 40 + 60}%` }}
+              style={{ width: `${width}%` }}
             />
           ))}
         </div>

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { searchDestinations } from "@/data/destinations";
 import type { Destination } from "@/types";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { getSearchNavigation } from "@/lib/search";
 
 interface SearchBarProps {
   variant?: "hero" | "default";
@@ -50,6 +51,22 @@ export function SearchBar({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const navigation = getSearchNavigation(query, results, selectedIndex);
+
+        if (navigation?.kind === "destination") {
+          const destination = results.find(
+            (result) => result.slug === navigation.slug
+          );
+          if (destination) handleSelect(destination);
+        } else if (navigation?.kind === "search") {
+          setIsOpen(false);
+          router.push(`/search?q=${encodeURIComponent(navigation.query)}`);
+        }
+        return;
+      }
+
       if (!isOpen) return;
 
       switch (e.key) {
@@ -65,21 +82,12 @@ export function SearchBar({
             prev > 0 ? prev - 1 : results.length - 1
           );
           break;
-        case "Enter":
-          e.preventDefault();
-          if (selectedIndex >= 0 && selectedIndex < results.length) {
-            handleSelect(results[selectedIndex]);
-          } else if (query.trim()) {
-            setIsOpen(false);
-            router.push(`/search?q=${encodeURIComponent(query)}`);
-          }
-          break;
         case "Escape":
           setIsOpen(false);
           break;
       }
     },
-    [isOpen, results, selectedIndex, query, handleSelect, router]
+      [isOpen, results, selectedIndex, query, handleSelect, router]
   );
 
   // Close dropdown on outside click
@@ -126,6 +134,9 @@ export function SearchBar({
         <input
           ref={inputRef}
           type="text"
+          aria-label="搜索目的地"
+          aria-autocomplete="list"
+          aria-controls="destination-search-results"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -145,11 +156,18 @@ export function SearchBar({
 
       {/* Dropdown Results */}
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-fade-in">
+        <div
+          id="destination-search-results"
+          role="listbox"
+          className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-fade-in"
+        >
           <div className="py-2">
             {results.map((dest, index) => (
               <button
                 key={dest.slug}
+                type="button"
+                role="option"
+                aria-selected={index === selectedIndex}
                 onClick={() => handleSelect(dest)}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
@@ -160,6 +178,7 @@ export function SearchBar({
                 <SafeImage
                   slug={dest.slug}
                   alt={dest.name}
+                  imageUrl={dest.thumbnailUrl}
                   className="w-10 h-10 rounded-lg flex-shrink-0"
                 />
                 <div className="min-w-0">

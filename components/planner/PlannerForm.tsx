@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getTodayISO, getDefaultTripDates } from "@/lib/utils";
 import {
@@ -15,8 +15,6 @@ interface PlannerFormProps {
   isDisabled: boolean;
 }
 
-const defaultTripDates = getDefaultTripDates();
-
 const inputClass = cn(
   // text-base (16px) prevents iOS auto-zoom on focus
   "w-full px-4 py-3.5 text-base rounded-xl border bg-white",
@@ -29,14 +27,22 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
   const [form, setForm] = useState<PlannerFormState>({
     origin: "",
     destination: "",
-    dates: { from: defaultTripDates.from, to: defaultTripDates.to },
+    dates: { from: "", to: "" },
     budget: "mid-range",
     interests: [],
     travelStyle: "solo",
     additionalNotes: "",
   });
+  const [today, setToday] = useState("");
 
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+
+  useEffect(() => {
+    // Static export cannot know the visitor's date; refresh these values after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setToday(getTodayISO());
+    setForm((prev) => ({ ...prev, dates: getDefaultTripDates() }));
+  }, []);
 
   const toggleInterest = useCallback((interest: Interest) => {
     setForm((prev) => ({
@@ -64,6 +70,11 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
     if (!form.dates.from) {
       newErrors.dates = "请选择出发日期";
     }
+    if (!form.dates.to) {
+      newErrors.dates = "请选择返程日期";
+    } else if (form.dates.from && form.dates.to < form.dates.from) {
+      newErrors.dates = "返程日期不能早于出发日期";
+    }
     if (form.interests.length === 0) {
       newErrors.interests = "至少选择一个兴趣偏好";
     }
@@ -82,10 +93,11 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
       {/* Origin & Destination — stacked on mobile */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          <label htmlFor="planner-origin" className="block text-sm font-medium text-surface-700 mb-1.5">
             📍 出发地 <span className="text-accent-red">*</span>
           </label>
           <input
+            id="planner-origin"
             type="text"
             value={form.origin}
             onChange={(e) => {
@@ -98,19 +110,23 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
               errors.origin ? "border-accent-red" : "border-surface-200"
             )}
             disabled={isDisabled}
+            required
+            aria-invalid={Boolean(errors.origin)}
+            aria-describedby={errors.origin ? "planner-origin-error" : undefined}
             inputMode="text"
             autoComplete="off"
           />
           {errors.origin && (
-            <p className="mt-1 text-sm text-accent-red">{errors.origin}</p>
+            <p id="planner-origin-error" className="mt-1 text-sm text-accent-red">{errors.origin}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          <label htmlFor="planner-destination" className="block text-sm font-medium text-surface-700 mb-1.5">
             🎯 目的地 <span className="text-accent-red">*</span>
           </label>
           <input
+            id="planner-destination"
             type="text"
             value={form.destination}
             onChange={(e) => {
@@ -123,11 +139,14 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
               errors.destination ? "border-accent-red" : "border-surface-200"
             )}
             disabled={isDisabled}
+            required
+            aria-invalid={Boolean(errors.destination)}
+            aria-describedby={errors.destination ? "planner-destination-error" : undefined}
             inputMode="text"
             autoComplete="off"
           />
           {errors.destination && (
-            <p className="mt-1 text-sm text-accent-red">{errors.destination}</p>
+            <p id="planner-destination-error" className="mt-1 text-sm text-accent-red">{errors.destination}</p>
           )}
         </div>
       </div>
@@ -135,13 +154,14 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          <label htmlFor="planner-from-date" className="block text-sm font-medium text-surface-700 mb-1.5">
             出发日期
           </label>
           <input
+            id="planner-from-date"
             type="date"
             value={form.dates.from}
-            min={getTodayISO()}
+            min={today || undefined}
             onChange={(e) =>
               setForm((prev) => ({
                 ...prev,
@@ -150,16 +170,18 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
             }
             className={cn(inputClass, "border-surface-200")}
             disabled={isDisabled}
+            required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-surface-700 mb-1.5">
+          <label htmlFor="planner-to-date" className="block text-sm font-medium text-surface-700 mb-1.5">
             返程日期
           </label>
           <input
+            id="planner-to-date"
             type="date"
             value={form.dates.to}
-            min={form.dates.from || getTodayISO()}
+            min={form.dates.from || today || undefined}
             onChange={(e) =>
               setForm((prev) => ({
                 ...prev,
@@ -168,9 +190,15 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
             }
             className={cn(inputClass, "border-surface-200")}
             disabled={isDisabled}
+            required
           />
         </div>
       </div>
+      {errors.dates && (
+        <p id="planner-dates-error" className="-mt-3 text-sm text-accent-red">
+          {errors.dates}
+        </p>
+      )}
 
       {/* Budget */}
       <div>
@@ -185,6 +213,7 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
               onClick={() =>
                 setForm((prev) => ({ ...prev, budget: opt.value as BudgetLevel }))
               }
+              aria-pressed={form.budget === opt.value}
               className={cn(
                 "min-h-[56px] px-2 py-3 rounded-xl border-2 text-sm font-medium",
                 "transition-all touch-manipulation active:scale-[0.96]",
@@ -217,6 +246,7 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
                 key={opt.value}
                 type="button"
                 onClick={() => toggleInterest(opt.value)}
+                aria-pressed={selected}
                 className={cn(
                   "min-h-[44px] px-3.5 py-2.5 rounded-full border text-sm font-medium",
                   "transition-all touch-manipulation active:scale-[0.95]",
@@ -233,7 +263,7 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
           })}
         </div>
         {errors.interests && (
-          <p className="mt-1 text-sm text-accent-red">{errors.interests}</p>
+          <p id="planner-interests-error" className="mt-1 text-sm text-accent-red">{errors.interests}</p>
         )}
       </div>
 
@@ -253,6 +283,7 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
                   travelStyle: opt.value as TravelStyle,
                 }))
               }
+              aria-pressed={form.travelStyle === opt.value}
               className={cn(
                 "min-h-[48px] px-4 py-3 rounded-xl border-2 text-sm font-medium",
                 "transition-all touch-manipulation active:scale-[0.96]",
@@ -272,10 +303,11 @@ export function PlannerForm({ onSubmit, isDisabled }: PlannerFormProps) {
 
       {/* Additional Notes */}
       <div>
-        <label className="block text-sm font-medium text-surface-700 mb-1.5">
+        <label htmlFor="planner-notes" className="block text-sm font-medium text-surface-700 mb-1.5">
           补充说明 <span className="text-surface-400 font-normal">(选填)</span>
         </label>
         <textarea
+          id="planner-notes"
           value={form.additionalNotes}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, additionalNotes: e.target.value }))

@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/Toast";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +28,7 @@ export const viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    SITE_URL
   ),
   title: {
     default: "TravelGuide — AI 智能旅游攻略",
@@ -54,13 +55,14 @@ export const metadata: Metadata = {
     title: "TravelGuide — AI 智能旅游攻略",
     description:
       "探索全球热门目的地，AI 智能生成个性化旅游攻略。涵盖景点推荐、交通攻略、美食指南、住宿推荐。",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.svg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "TravelGuide — AI 智能旅游攻略",
     description:
       "探索全球热门目的地，AI 智能生成个性化旅游攻略。涵盖景点推荐、交通攻略、美食指南、住宿推荐。",
+    images: ["/og-image.svg"],
   },
   robots: {
     index: true,

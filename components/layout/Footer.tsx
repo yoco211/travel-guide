@@ -20,9 +20,9 @@ const FOOTER_LINKS = {
   about: {
     title: "关于",
     links: [
-      { href: "#", label: "关于我们" },
-      { href: "#", label: "隐私政策" },
-      { href: "#", label: "使用条款" },
+      { href: "/about", label: "关于我们" },
+      { href: "/privacy", label: "隐私政策" },
+      { href: "/terms", label: "使用条款" },
     ],
   },
 };

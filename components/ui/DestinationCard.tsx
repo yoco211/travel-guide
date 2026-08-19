@@ -34,6 +34,7 @@ export function DestinationCard({
           <SafeImage
             slug={destination.slug}
             alt={destination.name}
+            imageUrl={destination.imageUrl}
             className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -74,6 +75,7 @@ export function DestinationCard({
         <SafeImage
           slug={destination.slug}
           alt={destination.name}
+          imageUrl={destination.imageUrl}
           className="w-full h-full"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
