@@ -7,6 +7,7 @@ import { searchDestinations } from "@/data/destinations";
 import type { Destination } from "@/types";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { getSearchNavigation } from "@/lib/search";
+import { getDestinationImage } from "@/data/destination-images";
 
 interface SearchBarProps {
   variant?: "hero" | "default";
@@ -178,7 +179,8 @@ export function SearchBar({
                 <SafeImage
                   slug={dest.slug}
                   alt={dest.name}
-                  imageUrl={dest.thumbnailUrl}
+                  imageUrl={getDestinationImage(dest.slug)?.thumbnailUrl}
+                  fallbackLabel={dest.name}
                   className="w-10 h-10 rounded-lg flex-shrink-0"
                 />
                 <div className="min-w-0">

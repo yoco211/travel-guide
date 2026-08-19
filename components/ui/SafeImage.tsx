@@ -69,9 +69,16 @@ interface SafeImageProps {
   alt: string;
   className?: string;
   imageUrl?: string;
+  fallbackLabel?: string;
 }
 
-export function SafeImage({ slug, alt, className, imageUrl }: SafeImageProps) {
+export function SafeImage({
+  slug,
+  alt,
+  className,
+  imageUrl,
+  fallbackLabel,
+}: SafeImageProps) {
   const [imgError, setImgError] = useState(false);
   const src = getImageUrl(imageUrl);
 
@@ -91,7 +98,7 @@ export function SafeImage({ slug, alt, className, imageUrl }: SafeImageProps) {
         <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
         <div className="absolute -bottom-6 -left-4 w-32 h-32 rounded-full bg-white/5" />
         <span className="relative text-3xl font-bold text-white/80 select-none tracking-wide">
-          {alt}
+          {fallbackLabel || alt}
         </span>
       </div>
     );

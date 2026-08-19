@@ -4,6 +4,7 @@ import type { Destination } from "@/types";
 import { INTEREST_OPTIONS } from "@/constants";
 import { getRegionLabel } from "@/lib/region";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { getDestinationImage } from "@/data/destination-images";
 
 interface DestinationCardProps {
   destination: Destination;
@@ -18,6 +19,7 @@ export function DestinationCard({
 }: DestinationCardProps) {
   const isFeatured = variant === "featured";
   const isCompact = variant === "compact";
+  const image = getDestinationImage(destination.slug);
 
   const displayTags = destination.tags.slice(0, 3).map((tag) => {
     const opt = INTEREST_OPTIONS.find((o) => o.value === tag);
@@ -34,7 +36,8 @@ export function DestinationCard({
           <SafeImage
             slug={destination.slug}
             alt={destination.name}
-            imageUrl={destination.imageUrl}
+            imageUrl={image?.heroUrl}
+            fallbackLabel={destination.name}
             className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -75,7 +78,8 @@ export function DestinationCard({
         <SafeImage
           slug={destination.slug}
           alt={destination.name}
-          imageUrl={destination.imageUrl}
+          imageUrl={image?.thumbnailUrl}
+          fallbackLabel={destination.name}
           className="w-full h-full"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

@@ -3,12 +3,14 @@
 import Link from "next/link";
 import type { Destination } from "@/types";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { getDestinationImage } from "@/data/destination-images";
 
 interface DestinationHeroProps {
   destination: Destination;
 }
 
 export function DestinationHero({ destination }: DestinationHeroProps) {
+  const image = getDestinationImage(destination.slug);
   const quickFacts = [
     { label: "最佳季节", value: destination.bestSeason, icon: "🌸" },
     { label: "语言", value: destination.language, icon: "🗣️" },
@@ -23,7 +25,8 @@ export function DestinationHero({ destination }: DestinationHeroProps) {
         <SafeImage
           slug={destination.slug}
           alt={destination.name}
-          imageUrl={destination.imageUrl}
+          imageUrl={image?.heroUrl}
+          fallbackLabel={destination.name}
           className="w-full h-full"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
