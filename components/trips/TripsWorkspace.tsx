@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { listStoredTrips, replaceStoredTrips } from "@/lib/trip-storage";
 import { TripDashboard } from "@/components/trips/TripDashboard";
 import { TripDetail } from "@/components/trips/TripDetail";
+import { TripDataTools } from "@/components/trips/TripDataTools";
 import { TripList } from "@/components/trips/TripList";
 import type { TripPlan } from "@/types";
 
@@ -54,5 +55,5 @@ export function TripsWorkspace() {
     return <TripDetail trip={selectedTrip} onChange={handleTripChange} onBack={() => { window.history.replaceState(null, "", "/my-trips"); setSelectedTripId(null); }} />;
   }
 
-  return <><TripDashboard trips={trips} /><TripList trips={trips} onChange={handleChange} /></>;
+  return <><TripDashboard trips={trips} /><TripDataTools trips={trips} onChange={handleChange} /><TripList trips={trips} onChange={handleChange} /></>;
 }

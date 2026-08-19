@@ -192,12 +192,58 @@ export interface BudgetPlan {
   items: BudgetItem[];
 }
 
+export interface TripChecklistItem {
+  id: string;
+  label: string;
+  done: boolean;
+  category?: string;
+}
+
+export interface TripNote {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface TripPhoto {
+  id: string;
+  name: string;
+  dataUrl: string;
+  createdAt: string;
+}
+
 export interface TripDestinationStop {
   id: string;
   destination: string;
   arrivalDate: string;
   departureDate: string;
   transportNote?: string;
+}
+
+export type TransportMode = "flight" | "train" | "bus" | "car" | "walk" | "other";
+
+export interface TransportSegment {
+  id: string;
+  from: string;
+  to: string;
+  mode: TransportMode;
+  departure?: string;
+  arrival?: string;
+  estimatedCost?: number;
+  note?: string;
+}
+
+export interface StayRecord {
+  id: string;
+  name: string;
+  area: string;
+  checkIn: string;
+  checkOut: string;
+  address?: string;
+  bookingUrl?: string;
+  estimatedCost?: number;
+  currency?: string;
+  note?: string;
 }
 
 export interface TripPlan {
@@ -211,4 +257,9 @@ export interface TripPlan {
   itinerary: TripDay[];
   budget: BudgetPlan;
   destinationStops?: TripDestinationStop[];
+  transportSegments?: TransportSegment[];
+  stays?: StayRecord[];
+  checklist?: TripChecklistItem[];
+  notes?: TripNote[];
+  photos?: TripPhoto[];
 }

@@ -10,7 +10,10 @@ import {
   applyItineraryTemplate,
   BUILT_IN_ITINERARY_TEMPLATES,
 } from "@/lib/itinerary-templates";
-import type { TripActivity, TripDay, TripPlan } from "@/types";
+import { tripToICS, tripToMarkdown } from "@/lib/trip-export";
+import { createStayRecord, createTransportSegment } from "@/lib/trip-logistics";
+import { calculateBudgetTotal, toggleChecklistItem } from "@/lib/trip-personal-utils";
+import type { BudgetCategory, StayRecord, TripActivity, TripDay, TripPlan, TransportMode } from "@/types";
 
 interface TripDetailProps {
   trip: TripPlan;
@@ -26,8 +29,27 @@ const PERIOD_LABELS: Record<TripActivity["period"], string> = {
   other: "其他",
 };
 
+const TRANSPORT_LABELS: Record<TransportMode, string> = {
+  flight: "飞机",
+  train: "火车 / 新干线",
+  bus: "巴士",
+  car: "自驾 / 打车",
+  walk: "步行",
+  other: "其他",
+};
+
 function updateTimestamp(): string {
   return new Date().toISOString();
+}
+
+function downloadText(filename: string, content: string, mimeType: string) {
+  const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export function TripDetail({ trip, onBack, onChange }: TripDetailProps) {
@@ -87,11 +109,76 @@ export function TripDetail({ trip, onBack, onChange }: TripDetailProps) {
     });
   };
 
+  const handleAddTransport = () => {
+    const from = window.prompt("从哪里出发？")?.trim();
+    const to = window.prompt("到哪里？")?.trim();
+    if (!from || !to) return;
+    const modeInput = window.prompt("交通方式：flight / train / bus / car / walk", "train")?.trim() as TransportMode | undefined;
+    const mode = modeInput && modeInput in TRANSPORT_LABELS ? modeInput : "other";
+    const segment = createTransportSegment(from, to, mode);
+    updateTrip({ transportSegments: [...(trip.transportSegments ?? []), segment] });
+  };
+
+  const handleAddStay = () => {
+    const name = window.prompt("住宿名称？")?.trim();
+    const area = window.prompt("所在区域？")?.trim();
+    if (!name || !area) return;
+    const stay = createStayRecord(name, area, trip.request.dates.from, trip.request.dates.to);
+    updateTrip({ stays: [...(trip.stays ?? []), stay] });
+  };
+
+  const handleAddBudgetItem = () => {
+    const label = window.prompt("预算项目名称？")?.trim();
+    const amount = Number(window.prompt("金额？", "0"));
+    if (!label || !Number.isFinite(amount) || amount < 0) return;
+    const categoryInput = window.prompt("分类：transport / accommodation / food / tickets / shopping / other", "other")?.trim() as BudgetCategory | undefined;
+    const category = categoryInput && ["transport", "accommodation", "food", "tickets", "shopping", "other"].includes(categoryInput) ? categoryInput : "other";
+    updateTrip({ budget: { ...trip.budget, items: [...trip.budget.items, { id: `budget-${Date.now().toString(36)}`, category, label, amount }] } });
+  };
+
+  const handleAddChecklistItem = () => {
+    const label = window.prompt("要打卡的事项？")?.trim();
+    if (!label) return;
+    updateTrip({ checklist: [...(trip.checklist ?? []), { id: `check-${Date.now().toString(36)}`, label, done: false }] });
+  };
+
+  const handleAddNote = () => {
+    const content = window.prompt("写下这次旅行的备注？")?.trim();
+    if (!content) return;
+    updateTrip({ notes: [...(trip.notes ?? []), { id: `note-${Date.now().toString(36)}`, content, createdAt: updateTimestamp() }] });
+  };
+
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > 1_800_000) {
+      window.alert("照片太大，请选择 1.8MB 以内的图片。");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return;
+      updateTrip({ photos: [...(trip.photos ?? []), { id: `photo-${Date.now().toString(36)}`, name: file.name, dataUrl: reader.result, createdAt: updateTimestamp() }] });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleApplyTemplate = (templateId: string) => {
     const template = BUILT_IN_ITINERARY_TEMPLATES.find((item) => item.id === templateId);
     if (!template) return;
     if (trip.itinerary.length > 0 && !window.confirm(`使用“${template.name}”会覆盖当前每日安排，确定继续吗？`)) return;
     updateTrip({ itinerary: applyItineraryTemplate(template, trip.request.dates.from) });
+  };
+
+  const handleShare = async () => {
+    const markdown = tripToMarkdown(trip);
+    if (navigator.share) {
+      await navigator.share({ title: trip.title, text: markdown });
+      return;
+    }
+    await navigator.clipboard.writeText(markdown);
+    window.alert("行程内容已复制，可以粘贴到聊天或备忘录中分享。");
   };
 
   return (
@@ -118,6 +205,12 @@ export function TripDetail({ trip, onBack, onChange }: TripDetailProps) {
             {trip.itinerary.length ? `${trip.itinerary.length} 天行程` : "待整理行程"}
           </span>
         </div>
+        <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-surface-100">
+          <button type="button" onClick={() => downloadText(`${trip.title}.md`, tripToMarkdown(trip), "text/markdown")} className="min-h-[38px] px-3 py-2 rounded-xl border border-surface-200 text-sm text-surface-700 hover:bg-surface-50">导出 Markdown</button>
+          <button type="button" onClick={() => downloadText(`${trip.title}.ics`, tripToICS(trip), "text/calendar")} className="min-h-[38px] px-3 py-2 rounded-xl border border-surface-200 text-sm text-surface-700 hover:bg-surface-50">加入日历 ICS</button>
+          <button type="button" onClick={() => window.print()} className="min-h-[38px] px-3 py-2 rounded-xl border border-surface-200 text-sm text-surface-700 hover:bg-surface-50">打印 / PDF</button>
+          <button type="button" onClick={() => void handleShare()} className="min-h-[38px] px-3 py-2 rounded-xl bg-primary-50 text-sm text-primary-700 hover:bg-primary-100">分享行程</button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
@@ -138,6 +231,44 @@ export function TripDetail({ trip, onBack, onChange }: TripDetailProps) {
               <p className="text-xs text-surface-500 mt-2">{stop.arrivalDate} 至 {stop.departureDate}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-surface-900">城市间交通</h3>
+              <p className="text-sm text-surface-500 mt-1">记录换城市时的交通方式。</p>
+            </div>
+            <button type="button" onClick={handleAddTransport} className="min-h-[38px] px-3 py-2 rounded-xl bg-primary-50 text-primary-700 text-sm hover:bg-primary-100">＋ 添加</button>
+          </div>
+          <div className="space-y-3 mt-5">
+            {(trip.transportSegments ?? []).length === 0 ? <p className="text-sm text-surface-500">暂未记录交通。</p> : (trip.transportSegments ?? []).map((segment) => (
+              <div key={segment.id} className="flex items-center justify-between gap-3 rounded-xl bg-surface-50 p-3">
+                <div><p className="text-sm font-medium text-surface-900">{segment.from} → {segment.to}</p><p className="text-xs text-surface-500 mt-1">{TRANSPORT_LABELS[segment.mode]}</p></div>
+                <button type="button" onClick={() => updateTrip({ transportSegments: (trip.transportSegments ?? []).filter((item) => item.id !== segment.id) })} className="text-xs text-red-600 hover:underline">删除</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-surface-900">住宿</h3>
+              <p className="text-sm text-surface-500 mt-1">记录酒店、民宿和入住日期。</p>
+            </div>
+            <button type="button" onClick={handleAddStay} className="min-h-[38px] px-3 py-2 rounded-xl bg-primary-50 text-primary-700 text-sm hover:bg-primary-100">＋ 添加</button>
+          </div>
+          <div className="space-y-3 mt-5">
+            {(trip.stays ?? []).length === 0 ? <p className="text-sm text-surface-500">暂未记录住宿。</p> : (trip.stays ?? []).map((stay: StayRecord) => (
+              <div key={stay.id} className="flex items-center justify-between gap-3 rounded-xl bg-surface-50 p-3">
+                <div><p className="text-sm font-medium text-surface-900">{stay.name}</p><p className="text-xs text-surface-500 mt-1">{stay.area} · {stay.checkIn} 至 {stay.checkOut}</p></div>
+                <button type="button" onClick={() => updateTrip({ stays: (trip.stays ?? []).filter((item) => item.id !== stay.id) })} className="text-xs text-red-600 hover:underline">删除</button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -230,20 +361,36 @@ export function TripDetail({ trip, onBack, onChange }: TripDetailProps) {
         </div>
 
         <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-surface-900">预算</h3>
-          <p className="text-sm text-surface-500 mt-2">币种：{trip.budget.currency}</p>
-          {trip.budget.items.length === 0 ? (
-            <p className="text-sm text-surface-500 mt-5">还没有记录预算，后续可以在这里逐项添加。</p>
-          ) : (
-            <div className="space-y-3 mt-5">
-              {trip.budget.items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-surface-600">{item.label}</span>
-                  <span className="font-medium text-surface-900">{item.amount.toLocaleString()} {trip.budget.currency}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center justify-between gap-3">
+            <div><h3 className="text-lg font-semibold text-surface-900">预算</h3><p className="text-sm text-surface-500 mt-1">币种：{trip.budget.currency}</p></div>
+            <button type="button" onClick={handleAddBudgetItem} className="min-h-[38px] px-3 py-2 rounded-xl bg-primary-50 text-primary-700 text-sm hover:bg-primary-100">＋ 添加</button>
+          </div>
+          <p className="text-2xl font-bold text-surface-900 mt-5">{calculateBudgetTotal(trip.budget.items).toLocaleString()} <span className="text-sm font-normal text-surface-500">{trip.budget.currency}</span></p>
+          {trip.budget.items.length === 0 ? <p className="text-sm text-surface-500 mt-3">还没有记录预算。</p> : <div className="space-y-3 mt-4">{trip.budget.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 text-sm"><span className="text-surface-600">{item.label}</span><div className="flex items-center gap-3"><span className="font-medium text-surface-900">{item.amount.toLocaleString()}</span><button type="button" onClick={() => updateTrip({ budget: { ...trip.budget, items: trip.budget.items.filter((budgetItem) => budgetItem.id !== item.id) } })} className="text-xs text-red-600 hover:underline">删除</button></div></div>)}</div>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
+          <div className="flex items-center justify-between gap-3"><h3 className="text-lg font-semibold text-surface-900">出行清单</h3><button type="button" onClick={handleAddChecklistItem} className="text-sm text-primary-700 hover:underline">＋ 添加</button></div>
+          <div className="space-y-2 mt-4">{(trip.checklist ?? []).length === 0 ? <p className="text-sm text-surface-500">例如：护照、充电器、药品。</p> : (trip.checklist ?? []).map((item) => <div key={item.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={item.done} onChange={() => updateTrip({ checklist: toggleChecklistItem(trip.checklist ?? [], item.id) })} aria-label={item.label} /><span className={item.done ? "line-through text-surface-400" : "text-surface-700"}>{item.label}</span><button type="button" onClick={() => updateTrip({ checklist: (trip.checklist ?? []).filter((checkItem) => checkItem.id !== item.id) })} className="ml-auto text-xs text-red-600">删</button></div>)}</div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
+          <div className="flex items-center justify-between gap-3"><h3 className="text-lg font-semibold text-surface-900">旅行笔记</h3><button type="button" onClick={handleAddNote} className="text-sm text-primary-700 hover:underline">＋ 添加</button></div>
+          <div className="space-y-3 mt-4">{(trip.notes ?? []).length === 0 ? <p className="text-sm text-surface-500">记录预约信息、灵感或临时提醒。</p> : (trip.notes ?? []).map((note) => <div key={note.id} className="rounded-xl bg-surface-50 p-3 text-sm text-surface-700"><p className="whitespace-pre-wrap">{note.content}</p><button type="button" onClick={() => updateTrip({ notes: (trip.notes ?? []).filter((item) => item.id !== note.id) })} className="mt-2 text-xs text-red-600">删除</button></div>)}</div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-surface-200 shadow-sm p-6">
+          <div className="flex items-center justify-between gap-3"><h3 className="text-lg font-semibold text-surface-900">照片</h3><label className="cursor-pointer text-sm text-primary-700 hover:underline">＋ 添加<input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" /></label></div>
+          <p className="text-xs text-surface-400 mt-1">单张不超过 1.8MB，仅保存在本浏览器。</p>
+          <div className="grid grid-cols-3 gap-2 mt-4">{(trip.photos ?? []).map((photo) => <div key={photo.id} className="relative group">
+            {/* Local data URLs are intentionally rendered directly for private photo previews. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photo.dataUrl} alt={photo.name} className="w-full aspect-square object-cover rounded-lg" />
+            <button type="button" onClick={() => updateTrip({ photos: (trip.photos ?? []).filter((item) => item.id !== photo.id) })} className="absolute top-1 right-1 hidden group-hover:block rounded-full bg-black/70 text-white text-xs w-6 h-6">×</button>
+          </div>)}</div>
+          {(trip.photos ?? []).length === 0 && <p className="text-sm text-surface-500 mt-4">还没有照片附件。</p>}
         </div>
       </div>
     </section>

@@ -72,6 +72,50 @@ const destinationStopSchema = z.object({
   transportNote: z.string().optional(),
 });
 
+const transportSegmentSchema = z.object({
+  id: z.string().min(1),
+  from: z.string().min(1),
+  to: z.string().min(1),
+  mode: z.enum(["flight", "train", "bus", "car", "walk", "other"]),
+  departure: z.string().optional(),
+  arrival: z.string().optional(),
+  estimatedCost: z.number().finite().nonnegative().optional(),
+  note: z.string().optional(),
+});
+
+const stayRecordSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  area: z.string().min(1),
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  address: z.string().optional(),
+  bookingUrl: z.string().optional(),
+  estimatedCost: z.number().finite().nonnegative().optional(),
+  currency: z.string().optional(),
+  note: z.string().optional(),
+});
+
+const checklistItemSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  done: z.boolean(),
+  category: z.string().optional(),
+});
+
+const tripNoteSchema = z.object({
+  id: z.string().min(1),
+  content: z.string().min(1),
+  createdAt: z.string().datetime(),
+});
+
+const tripPhotoSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  dataUrl: z.string().max(2_500_000),
+  createdAt: z.string().datetime(),
+});
+
 export const tripPlanSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().min(1),
@@ -83,6 +127,11 @@ export const tripPlanSchema = z.object({
   itinerary: z.array(tripDaySchema),
   budget: budgetPlanSchema,
   destinationStops: z.array(destinationStopSchema).optional(),
+  transportSegments: z.array(transportSegmentSchema).optional(),
+  stays: z.array(stayRecordSchema).optional(),
+  checklist: z.array(checklistItemSchema).optional(),
+  notes: z.array(tripNoteSchema).optional(),
+  photos: z.array(tripPhotoSchema).optional(),
 });
 
 export function validateTripPlan(input: unknown) {
