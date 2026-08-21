@@ -3,11 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { searchDestinations } from "@/data/destinations";
-import type { Destination } from "@/types";
+import { searchSite, type SiteSearchResult } from "@/data/search";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { getSearchNavigation } from "@/lib/search";
-import { getDestinationImage } from "@/data/destination-images";
 
 interface SearchBarProps {
   variant?: "hero" | "default";
@@ -17,11 +15,11 @@ interface SearchBarProps {
 
 export function SearchBar({
   variant = "default",
-  placeholder = "搜索目的地...",
+  placeholder = "搜索城市或景点...",
   className,
 }: SearchBarProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Destination[]>([]);
+  const [results, setResults] = useState<SiteSearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -31,7 +29,7 @@ export function SearchBar({
   const handleSearch = useCallback((value: string) => {
     setQuery(value);
     if (value.trim().length >= 1) {
-      const matches = searchDestinations(value).slice(0, 8);
+      const matches = searchSite(value).slice(0, 8);
       setResults(matches);
       setIsOpen(matches.length > 0);
       setSelectedIndex(-1);
@@ -42,10 +40,10 @@ export function SearchBar({
   }, []);
 
   const handleSelect = useCallback(
-    (destination: Destination) => {
+    (result: SiteSearchResult) => {
       setIsOpen(false);
       setQuery("");
-      router.push(`/destinations/${destination.slug}`);
+      router.push(result.href);
     },
     [router]
   );
@@ -58,9 +56,16 @@ export function SearchBar({
 
         if (navigation?.kind === "destination") {
           const destination = results.find(
-            (result) => result.slug === navigation.slug
+            (result) =>
+              result.kind === "destination" && result.slug === navigation.slug
           );
           if (destination) handleSelect(destination);
+        } else if (navigation?.kind === "attraction") {
+          const attraction = results.find(
+            (result) =>
+              result.kind === "attraction" && result.slug === navigation.slug
+          );
+          if (attraction) handleSelect(attraction);
         } else if (navigation?.kind === "search") {
           setIsOpen(false);
           router.push(`/search?q=${encodeURIComponent(navigation.query)}`);
@@ -135,9 +140,9 @@ export function SearchBar({
         <input
           ref={inputRef}
           type="text"
-          aria-label="搜索目的地"
+          aria-label="搜索城市或景点"
           aria-autocomplete="list"
-          aria-controls="destination-search-results"
+          aria-controls="site-search-results"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -158,18 +163,18 @@ export function SearchBar({
       {/* Dropdown Results */}
       {isOpen && results.length > 0 && (
         <div
-          id="destination-search-results"
+          id="site-search-results"
           role="listbox"
           className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-fade-in"
         >
           <div className="py-2">
-            {results.map((dest, index) => (
+            {results.map((result, index) => (
               <button
-                key={dest.slug}
+                key={`${result.kind}-${result.slug}`}
                 type="button"
                 role="option"
                 aria-selected={index === selectedIndex}
-                onClick={() => handleSelect(dest)}
+                onClick={() => handleSelect(result)}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
                   "hover:bg-surface-50",
@@ -177,21 +182,30 @@ export function SearchBar({
                 )}
               >
                 <SafeImage
-                  slug={dest.slug}
-                  alt={dest.name}
-                  imageUrl={getDestinationImage(dest.slug)?.thumbnailUrl}
-                  fallbackLabel={dest.name}
+                  slug={result.slug}
+                  alt={result.name}
+                  imageUrl={result.thumbnailUrl}
+                  fallbackLabel={result.name}
                   className="w-10 h-10 rounded-lg flex-shrink-0"
                 />
                 <div className="min-w-0">
                   <div className="font-medium text-surface-900 truncate">
-                    {dest.name}
+                    {result.name}
                   </div>
-                  <div className="text-sm text-surface-500">{dest.country}</div>
+                  <div className="text-sm text-surface-500">
+                    {result.kind === "attraction"
+                      ? `${result.cityName} · ${result.category}`
+                      : result.country}
+                  </div>
                 </div>
                 <div className="ml-auto flex-shrink-0">
-                  <span className="inline-block px-2 py-0.5 bg-surface-100 text-surface-600 rounded text-xs">
-                    {dest.region}
+                  <span className={cn(
+                    "inline-block px-2 py-0.5 rounded text-xs",
+                    result.kind === "attraction"
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-surface-100 text-surface-600"
+                  )}>
+                    {result.kind === "attraction" ? "景点" : "城市"}
                   </span>
                 </div>
               </button>

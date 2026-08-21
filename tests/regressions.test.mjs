@@ -36,6 +36,13 @@ test("Enter opens the highlighted destination when one is selected", () => {
   );
 });
 
+test("Enter opens the highlighted attraction when one is selected", () => {
+  assert.deepEqual(
+    getSearchNavigation("故宫", [{ kind: "attraction", slug: "forbidden-city" }], 0),
+    { kind: "attraction", slug: "forbidden-city" }
+  );
+});
+
 test("rejects the retired dynamic Unsplash source URL", () => {
   assert.equal(
     getImageUrl("https://source.unsplash.com/800x600/?tokyo-shibuya-sensoji"),

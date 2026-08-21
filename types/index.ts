@@ -22,6 +22,32 @@ export interface Destination {
   description: string;
 }
 
+export type AttractionCategory =
+  | "历史建筑"
+  | "自然风光"
+  | "城市地标"
+  | "古典园林"
+  | "宗教建筑"
+  | "博物馆"
+  | "海滨度假"
+  | "文化街区";
+
+export interface Attraction {
+  slug: string;
+  name: string;
+  citySlug: string;
+  cityName: string;
+  country: string;
+  category: AttractionCategory;
+  imageUrl: string;
+  thumbnailUrl: string;
+  shortDescription: string;
+  description: string;
+  bestSeason: string;
+  suggestedDuration: string;
+  tags: string[];
+}
+
 // ============================================================
 // AI Planner Types
 // ============================================================
@@ -98,11 +124,17 @@ export interface StreamEvent {
 // ============================================================
 
 export interface SearchResult {
+  kind: "destination" | "attraction";
   slug: string;
   name: string;
   country: string;
+  cityName?: string;
+  citySlug?: string;
+  category?: AttractionCategory;
+  region?: string;
   matchScore: number;
   thumbnailUrl: string;
+  href: string;
 }
 
 // ============================================================

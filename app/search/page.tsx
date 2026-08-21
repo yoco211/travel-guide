@@ -3,14 +3,24 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { searchDestinations } from "@/data/destinations";
+import { searchSite } from "@/data/search";
+import { getAttraction } from "@/data/attractions";
+import { getDestination } from "@/data/destinations";
 import { DestinationCard } from "@/components/ui/DestinationCard";
+import { AttractionCard } from "@/components/ui/AttractionCard";
 
 function SearchContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
   const query = q.trim();
-  const results = query ? searchDestinations(query) : [];
+  const results = query ? searchSite(query) : [];
+  const destinationResults = results.filter(
+    (result) => result.kind === "destination"
+  );
+  const attractionResults = results
+    .filter((result) => result.kind === "attraction")
+    .map((result) => getAttraction(result.slug))
+    .filter((result): result is NonNullable<typeof result> => Boolean(result));
 
   return (
     <div className="min-h-screen bg-surface-50">
@@ -22,8 +32,8 @@ function SearchContent() {
           </h1>
           <p className="text-surface-500">
             {query
-              ? `找到 ${results.length} 个相关目的地`
-              : "输入目的地名称搜索你感兴趣的旅行目的地"}
+              ? `找到 ${results.length} 个相关城市或景点`
+              : "输入城市、国家、地区或景点名称开始搜索"}
           </p>
 
           {/* Search Box */}
@@ -46,7 +56,7 @@ function SearchContent() {
                 type="text"
                 name="q"
                 defaultValue={query}
-                placeholder="搜索城市、国家或地区..."
+                placeholder="搜索城市、国家、地区或景点，如：故宫、东京..."
                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-surface-200 bg-white text-surface-900 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 autoFocus
               />
@@ -60,11 +70,45 @@ function SearchContent() {
         {query ? (
           results.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {results.map((dest) => (
-                  <DestinationCard key={dest.slug} destination={dest} />
-                ))}
-              </div>
+              {destinationResults.length > 0 && (
+                <section>
+                  <div className="mb-5 flex items-end justify-between gap-4">
+                    <div>
+                      <p className="mb-1 text-sm font-medium text-primary-600">城市目的地</p>
+                      <h2 className="text-xl font-display font-bold text-surface-900">城市攻略</h2>
+                    </div>
+                    <span className="text-sm text-surface-500">{destinationResults.length} 个结果</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {destinationResults.map((result) => {
+                      const destination = getDestination(result.slug);
+                      return destination ? (
+                        <DestinationCard
+                          key={`destination-${destination.slug}`}
+                          destination={destination}
+                        />
+                      ) : null;
+                    })}
+                  </div>
+                </section>
+              )}
+
+              {attractionResults.length > 0 && (
+                <section className={destinationResults.length > 0 ? "mt-12" : ""}>
+                  <div className="mb-5 flex items-end justify-between gap-4">
+                    <div>
+                      <p className="mb-1 text-sm font-medium text-amber-600">景点内容</p>
+                      <h2 className="text-xl font-display font-bold text-surface-900">热门景点</h2>
+                    </div>
+                    <span className="text-sm text-surface-500">{attractionResults.length} 个结果</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {attractionResults.map((attraction) => (
+                      <AttractionCard key={`attraction-${attraction.slug}`} attraction={attraction} />
+                    ))}
+                  </div>
+                </section>
+              )}
 
               <div className="mt-12 text-center">
                 <div className="bg-gradient-to-r from-primary-50 to-amber-50 rounded-3xl p-8 max-w-2xl mx-auto">

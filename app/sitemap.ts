@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { attractions } from "@/data/attractions";
 import { popularDestinations } from "@/data/destinations";
 import { SITE_URL } from "@/lib/site";
 
@@ -20,6 +21,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/destinations/${destination.slug}`,
       changeFrequency: "monthly" as const,
       priority: 0.7,
+    })),
+    ...attractions.map((attraction) => ({
+      url: `${SITE_URL}/attractions/${attraction.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
     })),
   ];
 }

@@ -48,7 +48,7 @@ export function HeroSection() {
           <div className="animate-slide-up flex justify-center">
             <SearchBar
               variant="hero"
-              placeholder="搜索目的地，如：东京、巴黎、巴厘岛..."
+              placeholder="搜索城市或景点，如：东京、故宫、埃菲尔铁塔..."
             />
           </div>
 
